@@ -2,22 +2,21 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class ValidadorSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Aquí puedes agregar la lógica para crear un validador
-        // Por ejemplo, crear un usuario con el rol de validador
-        \App\Models\User::create([
-            'name' => 'Validador',
+        User::updateOrCreate([
             'email' => 'validador@gmail.com',
-            'password' => bcrypt('123456789'),
+        ], [
+            'name' => 'Usuario Validador',
+            'username' => 'validador',
+            'role' => 'validator',
+            'password' => Hash::make('12345678'),
         ]);
     }
 }

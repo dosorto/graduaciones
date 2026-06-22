@@ -1,48 +1,49 @@
 <x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+    <div class="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_60px_-30px_rgba(15,23,42,0.35)] sm:p-10">
+        <div class="mb-8">
+            <h1 class="text-3xl font-semibold text-slate-950">Crear cuenta</h1>
+            <p class="mt-2 text-sm text-slate-500">Registra tu usuario para empezar a administrar eventos e invitados.</p>
+        </div>
 
         <x-validation-errors class="mb-4" />
 
-        @session('status')
-            <div class="mb-4 font-medium text-sm text-green-600">
-                {{ $value }}
-            </div>
-        @endsession
-
-        <form method="POST" action="{{ route('login') }}">
+        <form method="POST" action="{{ route('register') }}" class="grid gap-5 md:grid-cols-2">
             @csrf
 
+            <div class="md:col-span-2">
+                <label for="name" class="block text-sm font-medium text-slate-700">Nombre completo</label>
+                <input id="name" class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" />
+            </div>
+
             <div>
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+                <label for="username" class="block text-sm font-medium text-slate-700">Nombre de usuario</label>
+                <input id="username" class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100" type="text" name="username" value="{{ old('username') }}" required autocomplete="username" />
             </div>
 
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
+            <div>
+                <label for="email" class="block text-sm font-medium text-slate-700">Correo electronico</label>
+                <input id="email" class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" />
             </div>
 
-            <div class="block mt-4">
-                <label for="remember_me" class="flex items-center">
-                    <x-checkbox id="remember_me" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-                </label>
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-700">Contrasena</label>
+                <input id="password" class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100" type="password" name="password" required autocomplete="new-password" />
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                @if (Route::has('password.request'))
-                    <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                        {{ __('Forgot your password?') }}
-                    </a>
-                @endif
+            <div>
+                <label for="password_confirmation" class="block text-sm font-medium text-slate-700">Confirmar contrasena</label>
+                <input id="password_confirmation" class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100" type="password" name="password_confirmation" required autocomplete="new-password" />
+            </div>
 
-                <x-button class="ms-4">
-                    {{ __('Log in') }}
-                </x-button>
+            <div class="md:col-span-2 flex flex-wrap items-center justify-between gap-4 pt-4">
+                <a class="text-sm text-slate-500 transition hover:text-slate-950" href="{{ route('login') }}">
+                    Ya tienes cuenta
+                </a>
+
+                <button class="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+                    Crear mi cuenta
+                </button>
             </div>
         </form>
-    </x-authentication-card>
+    </div>
 </x-guest-layout>

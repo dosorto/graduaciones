@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
@@ -17,8 +18,15 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
-        Validator::make($input, [
+        $username = $this->resolveUsername(
+            $input['username'] ?? $user->username,
+            $input['name'] ?? $user->name,
+            $user,
+        );
+
+        Validator::make([...$input, 'username' => $username], [
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z0-9._-]+$/', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
         ])->validateWithBag('updateProfileInformation');
@@ -29,10 +37,11 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 
         if ($input['email'] !== $user->email &&
             $user instanceof MustVerifyEmail) {
-            $this->updateVerifiedUser($user, $input);
+            $this->updateVerifiedUser($user, [...$input, 'username' => $username]);
         } else {
             $user->forceFill([
                 'name' => $input['name'],
+                'username' => $username,
                 'email' => $input['email'],
             ])->save();
         }
@@ -47,10 +56,41 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     {
         $user->forceFill([
             'name' => $input['name'],
+            'username' => $input['username'],
             'email' => $input['email'],
             'email_verified_at' => null,
         ])->save();
 
         $user->sendEmailVerificationNotification();
+    }
+
+    private function resolveUsername(?string $username, ?string $name, User $user): string
+    {
+        $candidate = Str::of($username ?: $name ?: 'usuario')
+            ->lower()
+            ->slug('.')
+            ->value();
+
+        $candidate = trim($candidate, '.');
+
+        if ($candidate === '') {
+            $candidate = 'usuario';
+        }
+
+        if (strlen($candidate) < 3) {
+            $candidate = str_pad($candidate, 3, '0');
+        }
+
+        $base = Str::limit($candidate, 50, '');
+        $resolved = $base;
+        $suffix = 1;
+
+        while (User::where('username', $resolved)->whereKeyNot($user->id)->exists()) {
+            $suffixText = '.'.$suffix;
+            $resolved = Str::limit($base, 50 - strlen($suffixText), '').$suffixText;
+            $suffix++;
+        }
+
+        return $resolved;
     }
 }

@@ -1,28 +1,60 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventInvitationAssetController;
+use App\Http\Controllers\EventInvitationDesignController;
+use App\Http\Controllers\EventGuestController;
+use App\Http\Controllers\EventInvitationController;
+use App\Http\Controllers\PublicInvitationController;
+use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\ValidatorInvitationController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\GraduandoController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
 
-// Rutas públicas para invitaciones
-Route::get('/invitacion/{codigo}', [GraduandoController::class, 'mostrarInvitacion'])->name('invitacion.mostrar');
+Route::get('/i/{token}/image.png', [PublicInvitationController::class, 'image'])->name('invitations.public.image');
+Route::get('/i/{token}', [PublicInvitationController::class, 'show'])->name('invitations.public.show');
+Route::get('/invitation-default-background.png', [EventInvitationAssetController::class, 'showDefaultBackground'])->name('invitations.default-background');
+Route::get('/events/{event}/invitation-background', [EventInvitationAssetController::class, 'showBackground'])->name('events.invitation-background');
 
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
-    'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-    
-    Route::resource('graduandos', GraduandoController::class);
-    Route::get('/verificar-invitacion/{codigo}', [GraduandoController::class, 'verificarInvitacion'])->name('invitacion.verificar');
-    Route::post('/marcar-tomada/{codigo}', [GraduandoController::class, 'marcarTomada'])->name('invitacion.marcar-tomada');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::resource('events', EventController::class);
+    Route::get('/events/{event}/invitation-design', [EventInvitationDesignController::class, 'edit'])->name('events.invitation-design.edit');
+    Route::put('/events/{event}/invitation-design', [EventInvitationDesignController::class, 'update'])->name('events.invitation-design.update');
+    Route::get('/events-template/guests', [EventGuestController::class, 'template'])->name('events.guests.template');
+    Route::get('/events/{event}/guests/import', [EventGuestController::class, 'createImport'])->name('events.guests.import.create');
+    Route::post('/events/{event}/guests/import/preview', [EventGuestController::class, 'previewImport'])->name('events.guests.import.preview');
+    Route::post('/events/{event}/guests/import/execute', [EventGuestController::class, 'executeImport'])->name('events.guests.import.execute');
+    Route::post('/events/{event}/guests', [EventGuestController::class, 'store'])->name('events.guests.store');
+    Route::post('/events/{event}/guests/import', [EventGuestController::class, 'import'])->name('events.guests.import');
+    Route::delete('/events/{event}/guests/{guest}', [EventGuestController::class, 'destroy'])->name('events.guests.destroy');
+    Route::get('/events/{event}/guests/{guest}/invitations', [EventInvitationController::class, 'showGuest'])->name('events.guests.invitations.show');
+    Route::post('/events/{event}/guests/{guest}/invitations', [EventInvitationController::class, 'add'])->name('events.guests.invitations.add');
+    Route::post('/events/{event}/guests/{guest}/invitations/{invitation}/share', [EventInvitationController::class, 'share'])->name('events.guests.invitations.share');
+    Route::delete('/events/{event}/guests/{guest}/invitations/{invitation}', [EventInvitationController::class, 'destroy'])->name('events.guests.invitations.destroy');
+});
 
-    Route::get('/verificar-invitacion', [GraduandoController::class, 'formularioVerificar'])->name('invitacion.formulario');
-    Route::post('/verificar-invitacion', [GraduandoController::class, 'procesarVerificacion'])->name('invitacion.procesar');
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'validator',
+])->group(function () {
+    Route::get('/validator', [ValidatorInvitationController::class, 'index'])->name('validator.dashboard');
+    Route::post('/validator/invitations/{invitation}/consume', [ValidatorInvitationController::class, 'consume'])->name('validator.invitations.consume');
+});
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'admin',
+])->group(function () {
+    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
 });
