@@ -19,6 +19,11 @@ class EventInvitation extends Model
         'sent_at',
         'used_at',
         'validated_by_user_id',
+        'reentry_enabled_at',
+        'reentry_enabled_by_user_id',
+        'reentry_used_at',
+        'reentry_validated_by_user_id',
+        'reentry_count',
     ];
 
     protected function casts(): array
@@ -26,6 +31,8 @@ class EventInvitation extends Model
         return [
             'sent_at' => 'datetime',
             'used_at' => 'datetime',
+            'reentry_enabled_at' => 'datetime',
+            'reentry_used_at' => 'datetime',
         ];
     }
 
@@ -44,9 +51,31 @@ class EventInvitation extends Model
         return $this->belongsTo(User::class, 'validated_by_user_id');
     }
 
+    public function reentryEnabledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reentry_enabled_by_user_id');
+    }
+
+    public function reentryValidator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reentry_validated_by_user_id');
+    }
+
     public function isUsed(): bool
     {
         return $this->used_at !== null;
+    }
+
+    public function hasPendingReentry(): bool
+    {
+        return $this->used_at !== null
+            && $this->reentry_enabled_at !== null
+            && $this->reentry_used_at === null;
+    }
+
+    public function hasRegisteredReentry(): bool
+    {
+        return $this->reentry_count > 0;
     }
 
     public function publicUrl(): string

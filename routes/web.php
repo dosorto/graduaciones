@@ -48,6 +48,7 @@ Route::middleware([
 ])->group(function () {
     Route::get('/validator', [ValidatorInvitationController::class, 'index'])->name('validator.dashboard');
     Route::post('/validator/invitations/{invitation}/consume', [ValidatorInvitationController::class, 'consume'])->name('validator.invitations.consume');
+    Route::post('/validator/invitations/{invitation}/enable-reentry', [ValidatorInvitationController::class, 'enableReentry'])->name('validator.invitations.enable-reentry');
 });
 
 Route::middleware([
