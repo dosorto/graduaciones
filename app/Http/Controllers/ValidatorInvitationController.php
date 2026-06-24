@@ -57,7 +57,7 @@ class ValidatorInvitationController extends Controller
             }
 
             return redirect()
-                ->route('validator.dashboard', ['code' => $invitation->code])
+                ->route('validator.dashboard')
                 ->with('status', 'Invitacion validada correctamente.');
         }
 
@@ -85,7 +85,7 @@ class ValidatorInvitationController extends Controller
         }
 
         return redirect()
-            ->route('validator.dashboard', ['code' => $invitation->code])
+            ->route('validator.dashboard')
             ->with('status', 'Reingreso registrado correctamente.');
     }
 

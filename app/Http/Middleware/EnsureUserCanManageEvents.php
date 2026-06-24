@@ -6,11 +6,11 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsValidator
+class EnsureUserCanManageEvents
 {
     public function handle(Request $request, Closure $next): Response
     {
-        abort_unless($request->user()?->canValidateInvitations(), 403);
+        abort_unless($request->user()?->canManageEvents(), 403);
 
         return $next($request);
     }

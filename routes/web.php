@@ -25,6 +25,13 @@ Route::middleware([
     config('jetstream.auth_session'),
 ])->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+});
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'event-manager',
+])->group(function () {
     Route::resource('events', EventController::class);
     Route::get('/events/{event}/invitation-design', [EventInvitationDesignController::class, 'edit'])->name('events.invitation-design.edit');
     Route::put('/events/{event}/invitation-design', [EventInvitationDesignController::class, 'update'])->name('events.invitation-design.update');

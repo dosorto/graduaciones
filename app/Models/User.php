@@ -83,6 +83,16 @@ class User extends Authenticatable
         return $this->role === 'validator';
     }
 
+    public function canValidateInvitations(): bool
+    {
+        return in_array($this->role, ['admin', 'validator'], true);
+    }
+
+    public function canManageEvents(): bool
+    {
+        return in_array($this->role, ['admin', 'organizer'], true);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

@@ -92,7 +92,7 @@
                                 Gestionar usuarios
                             </a>
                         @endif
-                        @if (Auth::user()->isValidator())
+                        @if (Auth::user()->canValidateInvitations())
                             <a href="{{ route('validator.dashboard') }}" class="inline-flex rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
                                 Ir al modulo validador
                             </a>

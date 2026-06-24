@@ -1,8 +1,11 @@
 <nav x-data="{ open: false }" class="border-b border-slate-200 bg-white/90 backdrop-blur">
+    @php
+        $homeRoute = Auth::user()->isValidator() ? route('validator.dashboard') : route('dashboard');
+    @endphp
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-18 items-center justify-between gap-4">
             <div class="flex items-center gap-8">
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-3">
+                <a href="{{ $homeRoute }}" class="inline-flex items-center gap-3">
                     <span class="grid size-10 place-items-center rounded-2xl bg-slate-950 text-sm font-bold text-white">IV</span>
                     <span class="hidden sm:block">
                         <span class="block text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Invitaciones</span>
@@ -11,18 +14,20 @@
                 </a>
 
                 <div class="hidden items-center gap-2 sm:flex">
-                    <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950' }} rounded-full px-4 py-2 text-sm font-semibold transition">
+                    <a href="{{ $homeRoute }}" class="{{ request()->routeIs('dashboard') || request()->routeIs('validator.dashboard') ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950' }} rounded-full px-4 py-2 text-sm font-semibold transition">
                         Inicio
                     </a>
-                    <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950' }} rounded-full px-4 py-2 text-sm font-semibold transition">
-                        Eventos
-                    </a>
+                    @if (Auth::user()->canManageEvents())
+                        <a href="{{ route('events.index') }}" class="{{ request()->routeIs('events.*') ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950' }} rounded-full px-4 py-2 text-sm font-semibold transition">
+                            Eventos
+                        </a>
+                    @endif
                     @if (Auth::user()->isAdmin())
                         <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950' }} rounded-full px-4 py-2 text-sm font-semibold transition">
                             Usuarios
                         </a>
                     @endif
-                    @if (Auth::user()->isValidator())
+                    @if (Auth::user()->canValidateInvitations())
                         <a href="{{ route('validator.dashboard') }}" class="{{ request()->routeIs('validator.*') ? 'bg-slate-950 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950' }} rounded-full px-4 py-2 text-sm font-semibold transition">
                             Validador
                         </a>
@@ -31,9 +36,11 @@
             </div>
 
             <div class="hidden items-center gap-3 sm:flex">
-                <a href="{{ route('events.create') }}" class="inline-flex rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
-                    Nuevo evento
-                </a>
+                @if (Auth::user()->canManageEvents())
+                    <a href="{{ route('events.create') }}" class="inline-flex rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
+                        Nuevo evento
+                    </a>
+                @endif
 
                 <x-dropdown align="right" width="64">
                     <x-slot name="trigger">
@@ -94,25 +101,29 @@
 
     <div :class="{'block': open, 'hidden': ! open}" class="hidden border-t border-slate-200 bg-white sm:hidden">
         <div class="space-y-3 px-4 py-4">
-            <a href="{{ route('dashboard') }}" class="block rounded-2xl px-4 py-3 text-sm font-semibold {{ request()->routeIs('dashboard') ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700' }}">
+            <a href="{{ $homeRoute }}" class="block rounded-2xl px-4 py-3 text-sm font-semibold {{ request()->routeIs('dashboard') || request()->routeIs('validator.dashboard') ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700' }}">
                 Inicio
             </a>
-            <a href="{{ route('events.index') }}" class="block rounded-2xl px-4 py-3 text-sm font-semibold {{ request()->routeIs('events.*') ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700' }}">
-                Eventos
-            </a>
+            @if (Auth::user()->canManageEvents())
+                <a href="{{ route('events.index') }}" class="block rounded-2xl px-4 py-3 text-sm font-semibold {{ request()->routeIs('events.*') ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700' }}">
+                    Eventos
+                </a>
+            @endif
             @if (Auth::user()->isAdmin())
                 <a href="{{ route('users.index') }}" class="block rounded-2xl px-4 py-3 text-sm font-semibold {{ request()->routeIs('users.*') ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700' }}">
                     Usuarios
                 </a>
             @endif
-            @if (Auth::user()->isValidator())
+            @if (Auth::user()->canValidateInvitations())
                 <a href="{{ route('validator.dashboard') }}" class="block rounded-2xl px-4 py-3 text-sm font-semibold {{ request()->routeIs('validator.*') ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-700' }}">
                     Validador
                 </a>
             @endif
-            <a href="{{ route('events.create') }}" class="block rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950">
-                Nuevo evento
-            </a>
+            @if (Auth::user()->canManageEvents())
+                <a href="{{ route('events.create') }}" class="block rounded-2xl bg-amber-400 px-4 py-3 text-sm font-semibold text-slate-950">
+                    Nuevo evento
+                </a>
+            @endif
         </div>
 
         <div class="border-t border-slate-200 px-4 py-4">

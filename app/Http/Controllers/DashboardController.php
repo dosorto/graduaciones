@@ -4,13 +4,19 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function __invoke(Request $request): View|RedirectResponse
     {
         $user = $request->user();
+
+        if ($user->isValidator()) {
+            return redirect()->route('validator.dashboard');
+        }
+
         $events = $user->events()
             ->withCount('guests')
             ->with('guests')
