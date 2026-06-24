@@ -71,7 +71,7 @@ class EventInvitationController extends Controller
 
     private function authorizeOwnership(Request $request, Event $event): void
     {
-        abort_unless($event->user_id === $request->user()->id, 403);
+        abort_unless($request->user()?->canAccessEvent($event), 403);
     }
 
     private function whatsAppUrl(EventGuest $guest, EventInvitation $invitation): ?string

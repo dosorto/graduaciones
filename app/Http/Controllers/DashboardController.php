@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Event;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,8 @@ class DashboardController extends Controller
             return redirect()->route('validator.dashboard');
         }
 
-        $events = $user->events()
+        $events = Event::query()
+            ->when(! $user->isAdmin(), fn ($query) => $query->where('user_id', $user->id))
             ->withCount('guests')
             ->with('guests')
             ->orderBy('event_date')

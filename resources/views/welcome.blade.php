@@ -22,7 +22,6 @@
                         <a href="{{ route('dashboard') }}" class="rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-950 hover:text-slate-950">Dashboard</a>
                     @else
                         <a href="{{ route('login') }}" class="rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-950 hover:text-slate-950">Ingresar</a>
-                        <a href="{{ route('register') }}" class="rounded-full bg-slate-950 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">Crear cuenta</a>
                     @endauth
                 </nav>
             </header>

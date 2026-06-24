@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="border-b border-slate-200 bg-white/90 backdrop-blur">
+<nav x-data="{ open: false }" class="relative z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
     @php
         $homeRoute = Auth::user()->isValidator() ? route('validator.dashboard') : route('dashboard');
     @endphp
@@ -35,7 +35,7 @@
                 </div>
             </div>
 
-            <div class="hidden items-center gap-3 sm:flex">
+            <div class="relative z-50 hidden items-center gap-3 sm:flex">
                 @if (Auth::user()->canManageEvents())
                     <a href="{{ route('events.create') }}" class="inline-flex rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-300">
                         Nuevo evento

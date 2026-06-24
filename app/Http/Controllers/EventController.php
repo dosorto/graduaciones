@@ -11,9 +11,11 @@ class EventController extends Controller
 {
     public function index(Request $request): View
     {
+        $user = $request->user();
+
         return view('events.index', [
-            'events' => $request->user()
-                ->events()
+            'events' => Event::query()
+                ->when(! $user->isAdmin(), fn ($query) => $query->where('user_id', $user->id))
                 ->withCount('guests')
                 ->orderBy('event_date')
                 ->orderBy('event_time')
@@ -117,6 +119,6 @@ class EventController extends Controller
 
     private function authorizeOwnership(Request $request, Event $event): void
     {
-        abort_unless($event->user_id === $request->user()->id, 403);
+        abort_unless($request->user()?->canAccessEvent($event), 403);
     }
 }

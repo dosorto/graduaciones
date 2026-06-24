@@ -3,9 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Event;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class User extends Authenticatable
 {
     use HasApiTokens;
+    use SoftDeletes;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory;
@@ -85,12 +88,17 @@ class User extends Authenticatable
 
     public function canValidateInvitations(): bool
     {
-        return in_array($this->role, ['admin', 'validator'], true);
+        return in_array($this->role, ['admin', 'organizer', 'validator'], true);
     }
 
     public function canManageEvents(): bool
     {
         return in_array($this->role, ['admin', 'organizer'], true);
+    }
+
+    public function canAccessEvent(Event $event): bool
+    {
+        return $this->isAdmin() || $event->user_id === $this->id;
     }
 
     public function isAdmin(): bool

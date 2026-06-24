@@ -217,19 +217,19 @@
                     @csrf
                     <div class="grid gap-5 md:grid-cols-2">
                         <div>
-                            <label for="first_name" class="block text-sm font-medium text-slate-700">Nombre</label>
+                            <label for="first_name" class="block text-sm font-medium text-slate-700">Nombre <span class="text-rose-600">*</span></label>
                             <input id="first_name" name="first_name" type="text" value="{{ old('first_name') }}" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
                         </div>
                         <div>
-                            <label for="last_name" class="block text-sm font-medium text-slate-700">Apellidos</label>
+                            <label for="last_name" class="block text-sm font-medium text-slate-700">Apellidos <span class="text-rose-600">*</span></label>
                             <input id="last_name" name="last_name" type="text" value="{{ old('last_name') }}" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
                         </div>
                         <div>
-                            <label for="phone" class="block text-sm font-medium text-slate-700">Numero de telefono</label>
+                            <label for="phone" class="block text-sm font-medium text-slate-700">Numero de telefono <span class="text-rose-600">*</span></label>
                             <input id="phone" name="phone" type="text" value="{{ old('phone') }}" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
                         </div>
                         <div>
-                            <label for="invitation_count" class="block text-sm font-medium text-slate-700">Cantidad de invitaciones</label>
+                            <label for="invitation_count" class="block text-sm font-medium text-slate-700">Cantidad de invitaciones <span class="text-rose-600">*</span></label>
                             <input id="invitation_count" name="invitation_count" type="number" min="1" max="20" value="{{ old('invitation_count', 1) }}" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
                         </div>
                     </div>

@@ -4,7 +4,7 @@
 
 <div class="grid gap-6 md:grid-cols-2">
     <div class="md:col-span-2">
-        <label for="name" class="block text-sm font-medium text-slate-700">Nombre del evento</label>
+        <label for="name" class="block text-sm font-medium text-slate-700">Nombre del evento <span class="text-rose-600">*</span></label>
         <input
             id="name"
             name="name"
@@ -19,7 +19,7 @@
     </div>
 
     <div>
-        <label for="event_date" class="block text-sm font-medium text-slate-700">Fecha</label>
+        <label for="event_date" class="block text-sm font-medium text-slate-700">Fecha <span class="text-rose-600">*</span></label>
         <input
             id="event_date"
             name="event_date"
@@ -34,7 +34,7 @@
     </div>
 
     <div>
-        <label for="event_time" class="block text-sm font-medium text-slate-700">Hora</label>
+        <label for="event_time" class="block text-sm font-medium text-slate-700">Hora <span class="text-rose-600">*</span></label>
         <input
             id="event_time"
             name="event_time"
@@ -49,7 +49,7 @@
     </div>
 
     <div class="md:col-span-2">
-        <label for="venue" class="block text-sm font-medium text-slate-700">Lugar</label>
+        <label for="venue" class="block text-sm font-medium text-slate-700">Lugar <span class="text-rose-600">*</span></label>
         <input
             id="venue"
             name="venue"
