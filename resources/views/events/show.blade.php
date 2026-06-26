@@ -27,7 +27,31 @@
         class="py-10"
         x-data="{
             guestModalOpen: @js($errors->has('first_name') || $errors->has('last_name') || $errors->has('phone') || $errors->has('invitation_count')),
-            importModalOpen: false
+            editGuestModalOpen: false,
+            importModalOpen: false,
+            guestsData: @js($guests->getCollection()->map(fn ($guest) => [
+                'id' => $guest->id,
+                'first_name' => $guest->first_name,
+                'last_name' => $guest->last_name,
+                'phone' => $guest->phone,
+                'invitation_count' => $guest->invitation_count,
+            ])->values()),
+            editGuestForm: {
+                id: null,
+                first_name: '',
+                last_name: '',
+                phone: '',
+                invitation_count: 1,
+            },
+            openEditGuest(guestId) {
+                const guest = this.guestsData.find((item) => Number(item.id) === Number(guestId));
+                if (! guest) return;
+                this.editGuestForm = { ...guest };
+                this.editGuestModalOpen = true;
+            },
+            editGuestAction() {
+                return @js(route('events.guests.update', [$event, '__GUEST__'])).replace('__GUEST__', this.editGuestForm.id ?? '');
+            }
         }"
     >
         <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
@@ -92,6 +116,25 @@
                     </button>
                 </div>
 
+                <div class="mb-6 flex flex-wrap gap-3">
+                    @foreach ([
+                        'all' => ['label' => 'Todos', 'count' => $guestStatusSummary['all']],
+                        'pending' => ['label' => 'Pendientes', 'count' => $guestStatusSummary['pending']],
+                        'partial' => ['label' => 'Parcialmente enviados', 'count' => $guestStatusSummary['partial']],
+                        'sent' => ['label' => 'Enviados', 'count' => $guestStatusSummary['sent']],
+                    ] as $value => $tab)
+                        <a
+                            href="{{ route('events.show', [$event, 'status' => $value, 'search' => $filters['search'], 'per_page' => $filters['per_page']]) }}"
+                            class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition {{ $filters['status'] === $value ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-950 hover:text-slate-950' }}"
+                        >
+                            <span>{{ $tab['label'] }}</span>
+                            <span class="inline-flex min-w-7 items-center justify-center rounded-full px-2 py-0.5 text-xs {{ $filters['status'] === $value ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-700' }}">
+                                {{ $tab['count'] }}
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+
                 <form
                     method="GET"
                     action="{{ route('events.show', $event) }}"
@@ -104,6 +147,7 @@
                     }"
                     class="mb-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4"
                 >
+                    <input type="hidden" name="status" value="{{ $filters['status'] }}">
                     <div class="grid gap-4 lg:grid-cols-[1fr_180px_auto]">
                     <div>
                         <label for="search" class="block text-sm font-medium text-slate-700">Buscar invitado</label>
@@ -118,7 +162,7 @@
                         </select>
                     </div>
                     <div class="flex flex-wrap items-end gap-3">
-                        @if ($filters['search'] !== '' || $filters['per_page'] !== 10)
+                        @if ($filters['search'] !== '' || $filters['per_page'] !== 10 || $filters['status'] !== 'all')
                             <a href="{{ route('events.show', $event) }}" class="inline-flex rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-950 hover:text-slate-950">
                                 Limpiar
                             </a>
@@ -140,9 +184,18 @@
 
                     <div class="divide-y divide-slate-200">
                         @forelse ($guests as $guest)
+                            @php
+                                $sentInvitations = (int) $guest->sent_invitations_count;
+                                $totalInvitations = (int) $guest->invitations_count;
+                                $rowClasses = match (true) {
+                                    $totalInvitations > 0 && $sentInvitations >= $totalInvitations => 'bg-emerald-50/80 hover:bg-emerald-100/70',
+                                    $sentInvitations > 0 => 'bg-amber-50/80 hover:bg-amber-100/70',
+                                    default => 'bg-white hover:bg-slate-50',
+                                };
+                            @endphp
                             <article
                                 onclick="window.location='{{ route('events.guests.invitations.show', [$event, $guest]) }}'"
-                                class="grid cursor-pointer gap-4 px-5 py-5 transition hover:bg-amber-50/50 md:grid-cols-[1.1fr_1.1fr_0.9fr_0.8fr_1fr] md:items-center"
+                                class="grid cursor-pointer gap-4 px-5 py-5 transition {{ $rowClasses }} md:grid-cols-[1.1fr_1.1fr_0.9fr_0.8fr_1fr] md:items-center"
                             >
                                 <div>
                                     <p class="text-xs uppercase tracking-[0.18em] text-slate-400 md:hidden">Nombre</p>
@@ -161,9 +214,20 @@
                                     <div class="space-y-2">
                                         <p class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">{{ $guest->invitation_count }}</p>
                                         <p class="text-xs text-slate-500">{{ $guest->invitations_count }} generadas</p>
+                                        <p class="text-xs font-medium {{ $sentInvitations >= $totalInvitations && $totalInvitations > 0 ? 'text-emerald-700' : ($sentInvitations > 0 ? 'text-amber-700' : 'text-slate-500') }}">
+                                            {{ $sentInvitations }} enviadas
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-3">
+                                    <button
+                                        type="button"
+                                        onclick="event.stopPropagation()"
+                                        @click="openEditGuest({{ $guest->id }})"
+                                        class="text-sm font-semibold text-slate-700 transition hover:text-slate-950"
+                                    >
+                                        Editar
+                                    </button>
                                     <a href="{{ route('events.guests.invitations.show', [$event, $guest]) }}" onclick="event.stopPropagation()" class="text-sm font-semibold text-slate-700 transition hover:text-slate-950">
                                         Gestionar
                                     </a>
@@ -178,8 +242,8 @@
                             </article>
                         @empty
                             <div class="px-6 py-14 text-center">
-                                <p class="text-lg font-semibold text-slate-950">No hay invitados registrados con ese criterio.</p>
-                                <p class="mt-2 text-sm text-slate-500">Ajusta la busqueda, cambia la paginacion o agrega un nuevo invitado.</p>
+                                <p class="text-lg font-semibold text-slate-950">No hay invitados para este criterio.</p>
+                                <p class="mt-2 text-sm text-slate-500">Cambia de pestana, ajusta la busqueda o agrega un nuevo invitado.</p>
                             </div>
                         @endforelse
                     </div>
@@ -240,6 +304,60 @@
                         </button>
                         <button type="submit" class="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
                             Guardar invitado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div
+            x-cloak
+            x-show="editGuestModalOpen"
+            x-transition.opacity
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-8"
+        >
+            <div @click.outside="editGuestModalOpen = false" class="w-full max-w-2xl rounded-[2rem] bg-white p-8 shadow-2xl">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">Registro manual</p>
+                        <h3 class="mt-2 text-2xl font-semibold text-slate-950">Editar invitado</h3>
+                    </div>
+                    <button type="button" @click="editGuestModalOpen = false" class="rounded-full bg-slate-100 p-2 text-slate-500 transition hover:bg-slate-200 hover:text-slate-800">
+                        <span class="sr-only">Cerrar</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form method="POST" :action="editGuestAction()" class="mt-8 space-y-5">
+                    @csrf
+                    @method('PUT')
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <div>
+                            <label for="edit_first_name" class="block text-sm font-medium text-slate-700">Nombre <span class="text-rose-600">*</span></label>
+                            <input id="edit_first_name" name="first_name" type="text" x-model="editGuestForm.first_name" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                        </div>
+                        <div>
+                            <label for="edit_last_name" class="block text-sm font-medium text-slate-700">Apellidos <span class="text-rose-600">*</span></label>
+                            <input id="edit_last_name" name="last_name" type="text" x-model="editGuestForm.last_name" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                        </div>
+                        <div>
+                            <label for="edit_phone" class="block text-sm font-medium text-slate-700">Numero de telefono <span class="text-rose-600">*</span></label>
+                            <input id="edit_phone" name="phone" type="text" x-model="editGuestForm.phone" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                        </div>
+                        <div>
+                            <label for="edit_invitation_count" class="block text-sm font-medium text-slate-700">Cantidad de invitaciones <span class="text-rose-600">*</span></label>
+                            <input id="edit_invitation_count" name="invitation_count" type="number" min="1" max="20" x-model="editGuestForm.invitation_count" required class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <button type="button" @click="editGuestModalOpen = false" class="text-sm font-medium text-slate-500 transition hover:text-slate-950">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="inline-flex rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+                            Guardar cambios
                         </button>
                     </div>
                 </form>

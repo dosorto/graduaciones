@@ -99,18 +99,27 @@ class EventGuestController extends Controller
     {
         $this->authorizeOwnership($request, $event);
 
-        $validated = $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30'],
-            'invitation_count' => ['required', 'integer', 'min:1', 'max:20'],
-        ]);
+        $validated = $this->validateGuest($request);
 
         $event->guests()->create($validated);
 
         return redirect()
             ->route('events.show', $event)
             ->with('status', 'Invitado agregado correctamente.');
+    }
+
+    public function update(Request $request, Event $event, EventGuest $guest): RedirectResponse
+    {
+        $this->authorizeOwnership($request, $event);
+        abort_unless($guest->event_id === $event->id, 404);
+
+        $validated = $this->validateGuest($request);
+
+        $guest->update($validated);
+
+        return redirect()
+            ->route('events.show', $event)
+            ->with('status', 'Invitado actualizado correctamente.');
     }
 
     public function destroy(Request $request, Event $event, EventGuest $guest): RedirectResponse
@@ -148,6 +157,16 @@ class EventGuestController extends Controller
     private function authorizeOwnership(Request $request, Event $event): void
     {
         abort_unless($request->user()?->canAccessEvent($event), 403);
+    }
+
+    private function validateGuest(Request $request): array
+    {
+        return $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:30'],
+            'invitation_count' => ['required', 'integer', 'min:1', 'max:20'],
+        ]);
     }
 
     private function previewSessionKey(Event $event): string

@@ -40,6 +40,7 @@ Route::middleware([
     Route::post('/events/{event}/guests/import/preview', [EventGuestController::class, 'previewImport'])->name('events.guests.import.preview');
     Route::post('/events/{event}/guests/import/execute', [EventGuestController::class, 'executeImport'])->name('events.guests.import.execute');
     Route::post('/events/{event}/guests', [EventGuestController::class, 'store'])->name('events.guests.store');
+    Route::put('/events/{event}/guests/{guest}', [EventGuestController::class, 'update'])->name('events.guests.update');
     Route::post('/events/{event}/guests/import', [EventGuestController::class, 'import'])->name('events.guests.import');
     Route::delete('/events/{event}/guests/{guest}', [EventGuestController::class, 'destroy'])->name('events.guests.destroy');
     Route::get('/events/{event}/guests/{guest}/invitations', [EventInvitationController::class, 'showGuest'])->name('events.guests.invitations.show');

@@ -49,11 +49,19 @@ class EventController extends Controller
     {
         $this->authorizeOwnership($request, $event);
         $search = trim((string) $request->query('search', ''));
+        $status = (string) $request->query('status', 'all');
+        $status = in_array($status, ['all', 'pending', 'partial', 'sent'], true) ? $status : 'all';
         $perPage = (int) $request->query('per_page', 10);
         $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 10;
 
-        $guests = $event->guests()
-            ->withCount('invitations')
+        $guestQuery = $event->guests()
+            ->withCount([
+                'invitations',
+                'invitations as sent_invitations_count' => fn ($query) => $query->whereNotNull('sent_at'),
+            ])
+            ->when($status === 'pending', fn ($query) => $query->having('sent_invitations_count', '=', 0))
+            ->when($status === 'partial', fn ($query) => $query->having('sent_invitations_count', '>', 0)->havingRaw('sent_invitations_count < invitations_count'))
+            ->when($status === 'sent', fn ($query) => $query->havingRaw('invitations_count > 0')->havingRaw('sent_invitations_count >= invitations_count'))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
@@ -65,13 +73,43 @@ class EventController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        $guestStatusSummary = $event->guests()
+            ->withCount([
+                'invitations',
+                'invitations as sent_invitations_count' => fn ($query) => $query->whereNotNull('sent_at'),
+            ])
+            ->get()
+            ->reduce(function (array $carry, $guest): array {
+                $carry['all']++;
+
+                $sentInvitations = (int) $guest->sent_invitations_count;
+                $totalInvitations = (int) $guest->invitations_count;
+
+                if ($sentInvitations === 0) {
+                    $carry['pending']++;
+                } elseif ($totalInvitations > 0 && $sentInvitations >= $totalInvitations) {
+                    $carry['sent']++;
+                } else {
+                    $carry['partial']++;
+                }
+
+                return $carry;
+            }, [
+                'all' => 0,
+                'pending' => 0,
+                'partial' => 0,
+                'sent' => 0,
+            ]);
+
         return view('events.show', [
             'event' => $event,
-            'guests' => $guests,
+            'guests' => $guestQuery,
             'filters' => [
                 'search' => $search,
+                'status' => $status,
                 'per_page' => $perPage,
             ],
+            'guestStatusSummary' => $guestStatusSummary,
             'guestMetrics' => [
                 'guests' => $event->guests()->count(),
                 'invitations' => (int) $event->guests()->sum('invitation_count'),
